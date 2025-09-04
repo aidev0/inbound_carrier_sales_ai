@@ -8,6 +8,19 @@ class MongoConnection:
     """MongoDB connection utility"""
     
     def __init__(self):
+        self.connection_string = None
+        self.database_name = None
+        self.loads_collection_name = None
+        self.client = None
+        self.db = None
+        self.loads_collection = None
+        self._initialized = False
+
+    def _initialize(self):
+        """Initialize connection parameters from environment variables"""
+        if self._initialized:
+            return True
+            
         self.connection_string = os.getenv('MONGODB_URL')
         self.database_name = os.getenv('DATABASE_NAME')
         self.loads_collection_name = os.getenv('LOADS_COLLECTION_NAME')
@@ -19,18 +32,23 @@ class MongoConnection:
         if not self.loads_collection_name:
             raise ValueError("LOADS_COLLECTION_NAME not found in environment variables")
             
-        self.client = None
-        self.db = None
-        self.loads_collection = None
+        self._initialized = True
+        return True
 
     def connect(self):
         """Establish MongoDB connection"""
         try:
-            self.client = MongoClient(self.connection_string)
+            if not self._initialize():
+                return False
+                
+            self.client = MongoClient(
+                self.connection_string,
+                serverSelectionTimeoutMS=5000  # 5 second timeout
+            )
             self.db = self.client[self.database_name]
             self.loads_collection = self.db[self.loads_collection_name]
             
-            # Test connection
+            # Test connection with timeout
             self.client.server_info()
             return True
         except Exception as e:
