@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from fmcsa_verify import verify_mc_number
+from mongo_client import mongo_conn
 from functools import wraps
 import os
 
@@ -61,6 +62,43 @@ def verify_carrier():
 def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy"})
+
+@app.route('/search-loads', methods=['POST'])
+@require_api_key
+def search_loads():
+    """Search for loads by equipment type"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'equipment_type' not in data:
+            return jsonify({
+                "status": "error",
+                "error": "equipment_type is required"
+            }), 400
+        
+        equipment_type = data['equipment_type']
+        
+        # Search loads in MongoDB
+        loads = mongo_conn.search_loads_by_equipment(equipment_type)
+        
+        if loads is None:
+            return jsonify({
+                "status": "error",
+                "error": "Database connection failed"
+            }), 500
+        
+        return jsonify({
+            "status": "success",
+            "equipment_type": equipment_type,
+            "count": len(loads),
+            "loads": loads
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": f"Internal server error: {str(e)}"
+        }), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
