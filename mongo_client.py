@@ -22,12 +22,12 @@ class MongoConnection:
         if self._initialized:
             return True
             
-        self.connection_string = os.getenv('MONGODB_URL')
+        self.connection_string = os.getenv('MONGODB_URI')
         self.database_name = os.getenv('DATABASE_NAME')
         self.loads_collection_name = os.getenv('LOADS_COLLECTION_NAME')
         
         if not self.connection_string:
-            raise ValueError("MONGODB_URL not found in environment variables")
+            raise ValueError("MONGODB_URI not found in environment variables")
         if not self.database_name:
             raise ValueError("DATABASE_NAME not found in environment variables") 
         if not self.loads_collection_name:
