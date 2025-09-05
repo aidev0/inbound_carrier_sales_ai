@@ -112,6 +112,30 @@ class MongoConnection:
             self.carriers_calls_collection = None
             return None
 
+    def get_all_carrier_calls(self):
+        """Get all carrier call records"""
+        try:
+            if self.carriers_calls_collection is None:
+                if not self.connect():
+                    return None
+            
+            # Get all documents sorted by created_at descending (newest first)
+            cursor = self.carriers_calls_collection.find().sort("created_at", -1)
+            calls = list(cursor)
+            
+            # Convert ObjectId to string for JSON serialization
+            for call in calls:
+                if '_id' in call:
+                    call['_id'] = str(call['_id'])
+                    
+            return calls
+        except Exception as e:
+            print(f"Error getting carrier calls: {e}")
+            # Reset connection on error
+            self.client = None
+            self.carriers_calls_collection = None
+            return None
+
     def close(self):
         """Close MongoDB connection"""
         if self.client:

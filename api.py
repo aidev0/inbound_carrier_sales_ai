@@ -100,39 +100,57 @@ def search_loads():
             "error": f"Internal server error: {str(e)}"
         }), 500
 
-@app.route('/carriers-calls', methods=['POST'])
+@app.route('/carriers-calls', methods=['GET', 'POST'])
 @require_api_key
-def create_carrier_call():
-    """Create a new carrier call record"""
+def carriers_calls():
+    """Handle carrier call records - GET to retrieve all, POST to create new"""
     try:
-        data = request.get_json()
-        
-        if not data:
+        if request.method == 'GET':
+            # Get all carrier calls
+            calls = mongo_conn.get_all_carrier_calls()
+            
+            if calls is None:
+                return jsonify({
+                    "status": "error",
+                    "error": "Database connection failed"
+                }), 500
+            
             return jsonify({
-                "status": "error",
-                "error": "Request body is required"
-            }), 400
-        
-        # Insert the document with timestamp
-        from datetime import datetime, timezone
-        call_data = {
-            **data,
-            "created_at": datetime.now(timezone.utc)
-        }
-        
-        result = mongo_conn.insert_carrier_call(call_data)
-        
-        if result is None:
+                "status": "success",
+                "count": len(calls),
+                "data": calls
+            })
+            
+        elif request.method == 'POST':
+            # Create new carrier call
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({
+                    "status": "error",
+                    "error": "Request body is required"
+                }), 400
+            
+            # Insert the document with timestamp
+            from datetime import datetime, timezone
+            call_data = {
+                **data,
+                "created_at": datetime.now(timezone.utc)
+            }
+            
+            result = mongo_conn.insert_carrier_call(call_data)
+            
+            if result is None:
+                return jsonify({
+                    "status": "error",
+                    "error": "Database connection failed"
+                }), 500
+            
             return jsonify({
-                "status": "error",
-                "error": "Database connection failed"
-            }), 500
-        
-        return jsonify({
-            "status": "success",
-            "message": "Carrier call record created successfully",
-            "data": result
-        })
+                "status": "success",
+                "message": "Carrier call record created successfully",
+                "data": result
+            })
         
     except Exception as e:
         return jsonify({
