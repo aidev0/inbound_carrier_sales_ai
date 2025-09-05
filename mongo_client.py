@@ -43,16 +43,26 @@ class MongoConnection:
                 
             self.client = MongoClient(
                 self.connection_string,
-                serverSelectionTimeoutMS=5000  # 5 second timeout
+                serverSelectionTimeoutMS=10000,  # 10 second timeout
+                connectTimeoutMS=15000,          # 15 second connect timeout
+                socketTimeoutMS=20000,           # 20 second socket timeout
+                maxIdleTimeMS=30000,             # 30 second idle timeout
+                maxPoolSize=10,                  # Maximum pool size
+                minPoolSize=1,                   # Minimum pool size
+                retryWrites=True,                # Enable retryable writes
+                retryReads=True                  # Enable retryable reads
             )
             self.db = self.client[self.database_name]
             self.loads_collection = self.db[self.loads_collection_name]
             
             # Test connection with timeout
-            self.client.server_info()
+            self.client.admin.command('ping')
             return True
         except Exception as e:
             print(f"MongoDB connection error: {e}")
+            if self.client:
+                self.client.close()
+                self.client = None
             return False
 
     def search_loads_by_equipment(self, equipment_type):
@@ -61,9 +71,12 @@ class MongoConnection:
             if not self.loads_collection:
                 if not self.connect():
                     return None
-                    
-            # Search for loads with matching equipment type
-            cursor = self.loads_collection.find({"equipment_type": equipment_type})
+            
+            # Search for loads with matching equipment type with timeout
+            cursor = self.loads_collection.find(
+                {"equipment_type": equipment_type}
+            ).max_time_ms(15000)  # 15 second query timeout
+            
             loads = list(cursor)
             
             # Convert ObjectId to string for JSON serialization
@@ -74,6 +87,9 @@ class MongoConnection:
             return loads
         except Exception as e:
             print(f"Error searching loads: {e}")
+            # Reset connection on error
+            self.client = None
+            self.loads_collection = None
             return None
 
     def close(self):
