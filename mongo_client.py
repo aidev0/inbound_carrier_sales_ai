@@ -44,16 +44,15 @@ class MongoConnection:
                 
             self.client = MongoClient(
                 self.connection_string,
-                serverSelectionTimeoutMS=10000,  # 10 second timeout
-                connectTimeoutMS=15000,          # 15 second connect timeout
-                socketTimeoutMS=20000,           # 20 second socket timeout
-                maxIdleTimeMS=30000,             # 30 second idle timeout
-                maxPoolSize=10,                  # Maximum pool size
-                minPoolSize=1,                   # Minimum pool size
+                serverSelectionTimeoutMS=5000,   # 5 second timeout
+                connectTimeoutMS=10000,          # 10 second connect timeout
+                socketTimeoutMS=0,               # No socket timeout
+                maxIdleTimeMS=50000,             # 50 second idle timeout
+                maxPoolSize=1,                   # Single connection
                 retryWrites=True,                # Enable retryable writes
                 retryReads=True,                 # Enable retryable reads
-                tls=True,                        # Enable TLS
-                tlsCAFile=certifi.where()        # Use certifi for CA certificates
+                ssl=True,                        # Enable SSL
+                ssl_cert_reqs='CERT_NONE'        # Bypass certificate validation
             )
             self.db = self.client[self.database_name]
             self.loads_collection = self.db[self.loads_collection_name]
