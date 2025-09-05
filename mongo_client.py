@@ -67,7 +67,7 @@ class MongoConnection:
     def search_loads_by_equipment(self, equipment_type):
         """Search loads by equipment type"""
         try:
-            if not self.loads_collection:
+            if self.loads_collection is None:
                 if not self.connect():
                     return None
             
@@ -94,7 +94,7 @@ class MongoConnection:
     def insert_carrier_call(self, call_data):
         """Insert a carrier call document"""
         try:
-            if not self.carriers_calls_collection:
+            if self.carriers_calls_collection is None:
                 if not self.connect():
                     return None
             
