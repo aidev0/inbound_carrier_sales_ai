@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+import certifi
 
 load_dotenv()
 
@@ -50,7 +51,9 @@ class MongoConnection:
                 maxPoolSize=10,                  # Maximum pool size
                 minPoolSize=1,                   # Minimum pool size
                 retryWrites=True,                # Enable retryable writes
-                retryReads=True                  # Enable retryable reads
+                retryReads=True,                 # Enable retryable reads
+                tls=True,                        # Enable TLS
+                tlsCAFile=certifi.where()        # Use certifi for CA certificates
             )
             self.db = self.client[self.database_name]
             self.loads_collection = self.db[self.loads_collection_name]
