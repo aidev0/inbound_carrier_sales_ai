@@ -44,21 +44,14 @@ class MongoConnection:
                 
             self.client = MongoClient(
                 self.connection_string,
-                serverSelectionTimeoutMS=5000,   # 5 second timeout
-                connectTimeoutMS=10000,          # 10 second connect timeout
-                socketTimeoutMS=0,               # No socket timeout
-                maxIdleTimeMS=50000,             # 50 second idle timeout
-                maxPoolSize=1,                   # Single connection
-                retryWrites=True,                # Enable retryable writes
-                retryReads=True,                 # Enable retryable reads
-                ssl=True,                        # Enable SSL
-                ssl_cert_reqs='CERT_NONE'        # Bypass certificate validation
+                socketTimeoutMS=60000, 
+                connectTimeoutMS=60000
             )
             self.db = self.client[self.database_name]
             self.loads_collection = self.db[self.loads_collection_name]
             
             # Test connection with timeout
-            self.client.admin.command('ping')
+            # self.client.admin.command('ping')
             return True
         except Exception as e:
             print(f"MongoDB connection error: {e}")
@@ -77,7 +70,7 @@ class MongoConnection:
             # Search for loads with matching equipment type with timeout
             cursor = self.loads_collection.find(
                 {"equipment_type": equipment_type}
-            ).max_time_ms(15000)  # 15 second query timeout
+            )
             
             loads = list(cursor)
             
