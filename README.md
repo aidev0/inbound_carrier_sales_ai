@@ -143,9 +143,76 @@ For production deployment:
 - **Docker Health Check**: Configured to check application health every 30 seconds
 - **Logs**: Application logs available via `docker logs` command
 
+## Build and Deployment
+
+### Automated Build Script
+
+Use the included `build.sh` script for automated building and deployment:
+
+```bash
+# Full build and deploy pipeline
+./build.sh
+
+# Custom commit message
+./build.sh --message "Add new feature"
+
+# Skip specific steps
+./build.sh --skip-tests --skip-docker
+
+# Show help
+./build.sh --help
+```
+
+The build script performs the following actions:
+1. **Git Status Check** - Stages uncommitted changes
+2. **Run Tests** - Executes pytest if available
+3. **Docker Build** - Builds and tests Docker image
+4. **Git Commit** - Commits changes with standardized message
+5. **GitHub Push** - Pushes to origin/main branch
+6. **Heroku Deploy** - Deploys to Heroku and runs health check
+
+### Manual Deployment
+
+#### Deploy to Heroku
+```bash
+# Add Heroku remote (first time only)
+heroku git:remote -a your-app-name
+
+# Deploy
+git push heroku main
+
+# Check deployment
+heroku logs --tail
+```
+
+#### Deploy to GitHub
+```bash
+git add .
+git commit -m "Your commit message"
+git push origin main
+```
+
+## Project Structure
+
+```
+inbound_carrier_sales_ai/
+├── api.py                  # Main Flask application
+├── mongo_client.py         # MongoDB connection and operations
+├── fmcsa_verify.py        # FMCSA carrier verification
+├── requirements.txt       # Python dependencies
+├── Dockerfile            # Docker container configuration
+├── docker-compose.yml    # Docker Compose for development
+├── build.sh             # Automated build and deployment script
+├── README.md            # This documentation
+├── .env                 # Environment variables (not in git)
+├── .env.example         # Example environment file
+└── .dockerignore        # Docker build exclusions
+```
+
 ## Security Features
 
 - Non-root user in Docker container
 - API key authentication on all endpoints
 - MongoDB connection with proper timeout and SSL settings
 - Environment variable-based configuration (no hardcoded secrets)
+- Automated testing and health checks in build pipeline
